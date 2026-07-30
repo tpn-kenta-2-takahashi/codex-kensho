@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ひとまず</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">personal task note</p>
+          <h1>ひとまず</h1>
+        </div>
+        <div class="top-actions">
+          <input id="searchInput" class="search" type="search" placeholder="検索" autocomplete="off" />
+          <button id="menuButton" class="icon-button" type="button" aria-label="メニュー">...</button>
+          <div id="menuPanel" class="menu-panel hidden">
+            <button id="exportButton" type="button">データを書き出す</button>
+            <label class="menu-file">
+              データを読み込む
+              <input id="importInput" type="file" accept="application/json" />
+            </label>
+            <button id="helpButton" type="button">このツールについて</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="sidebar" aria-label="ナビゲーション">
+          <section>
+            <h2>時期</h2>
+            <nav id="periodNav" class="nav-list"></nav>
+          </section>
+          <section>
+            <div class="section-title-row">
+              <h2>リスト</h2>
+              <button id="addListButton" class="mini-button" type="button">追加</button>
+            </div>
+            <nav id="customListNav" class="nav-list"></nav>
+          </section>
+        </aside>
+
+        <section class="task-pane">
+          <form id="quickAddForm" class="quick-add">
+            <input id="quickAddInput" type="text" placeholder="ひとまず書いておく..." autocomplete="off" />
+            <button type="submit">追加</button>
+          </form>
+
+          <div class="pane-heading">
+            <div>
+              <p id="viewKind" class="eyebrow">今日</p>
+              <h2 id="viewTitle">今日</h2>
+            </div>
+            <p id="taskCount" class="muted"></p>
+          </div>
+
+          <div id="emptyState" class="empty-state hidden">
+            <p>まだ何もありません。</p>
+            <button id="sampleButton" type="button">サンプルを追加</button>
+          </div>
+
+          <div id="taskList" class="task-list"></div>
+          <div id="completedSection" class="completed-section hidden">
+            <h3>今日終わったもの</h3>
+            <div id="completedList" class="task-list completed"></div>
+          </div>
+        </section>
+
+        <aside id="detailPane" class="detail-pane empty">
+          <p class="empty-detail">タスクを選ぶと、ここで詳しく編集できます。</p>
+        </aside>
+      </main>
+    </div>
+
+    <dialog id="helpDialog" class="dialog">
+      <form method="dialog">
+        <div class="dialog-head">
+          <h2>このツールについて</h2>
+          <button class="icon-button" type="submit" aria-label="閉じる">x</button>
+        </div>
+        <section>
+          <h3>保存について</h3>
+          <p>入力内容はこのブラウザに自動保存されます。保存ボタンはありません。別PCや別ブラウザには自動同期されません。</p>
+        </section>
+        <section>
+          <h3>表示について</h3>
+          <p>未完了タスクは期限と優先度で自動的に並びます。完了したタスクは今日中だけ一覧下部に残り、昨日以前の完了済みは通常表示から隠れます。</p>
+        </section>
+        <section>
+          <h3>リストについて</h3>
+          <p>「時期」はいつやるか、「リスト」はテーマ別のまとまりです。リストを削除すると、そのリストのタスクは未整理に戻ります。</p>
+        </section>
+        <section>
+          <h3>バックアップ</h3>
+          <p>右上メニューからJSONを書き出せます。読み込みでは、以前に書き出したデータを復元できます。</p>
+        </section>
+      </form>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

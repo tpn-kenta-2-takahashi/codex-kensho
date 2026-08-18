@@ -1,4 +1,5 @@
 const STORAGE_KEY = "hitomazu-task-note-v1";
+const LAYOUT_KEY = "hitomazu-task-note-layout-v1";
 
 const periods = [
   { id: "today", name: "今日" },
@@ -22,6 +23,7 @@ let selectedTaskId = state.tasks[0]?.id || null;
 let searchText = "";
 
 const els = {
+  workspace: document.querySelector("#workspace"),
   periodNav: document.querySelector("#periodNav"),
   customListNav: document.querySelector("#customListNav"),
   quickAddForm: document.querySelector("#quickAddForm"),
@@ -45,6 +47,9 @@ const els = {
   helpDialog: document.querySelector("#helpDialog"),
 };
 
+applySavedLayout();
+bindColumnResizers();
+syncSelectionToCurrentView();
 render();
 
 els.quickAddForm.addEventListener("submit", (event) => {
@@ -68,6 +73,7 @@ els.quickAddForm.addEventListener("submit", (event) => {
 
 els.searchInput.addEventListener("input", (event) => {
   searchText = event.target.value.trim().toLowerCase();
+  syncSelectionToCurrentView();
   render();
 });
 
@@ -238,6 +244,7 @@ function renderNav() {
   document.querySelectorAll("[data-nav-type]").forEach((button) => {
     button.addEventListener("click", () => {
       currentView = { type: button.dataset.navType, id: button.dataset.navId };
+      syncSelectionToCurrentView();
       render();
     });
   });
@@ -261,6 +268,12 @@ function getVisibleTasks() {
     if (!searchText) return true;
     return taskMatchesSearch(task);
   });
+}
+
+function syncSelectionToCurrentView() {
+  const visibleOpenTasks = getVisibleTasks().filter((task) => !task.done).sort(compareTasks);
+  const selectedIsVisible = selectedTaskId && visibleOpenTasks.some((task) => task.id === selectedTaskId);
+  selectedTaskId = selectedIsVisible ? selectedTaskId : visibleOpenTasks[0]?.id || null;
 }
 
 function matchesView(task, view) {
@@ -417,7 +430,7 @@ function bindDetail(task) {
   document.querySelector("#deleteTaskButton").addEventListener("click", () => {
     if (!confirm("このタスクを削除しますか？")) return;
     state.tasks = state.tasks.filter((item) => item.id !== task.id);
-    selectedTaskId = state.tasks[0]?.id || null;
+    syncSelectionToCurrentView();
     persistAndRender();
   });
 
@@ -443,6 +456,9 @@ function updateTask(id, patch) {
   const task = state.tasks.find((item) => item.id === id);
   Object.assign(task, patch);
   touch(task);
+  if ("period" in patch || "listId" in patch) {
+    syncSelectionToCurrentView();
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   renderNav();
   renderTaskCollections();
@@ -558,4 +574,67 @@ function escapeHtml(value) {
 
 function escapeAttribute(value) {
   return escapeHtml(value);
+}
+
+function applySavedLayout() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) || "{}");
+    if (Number.isFinite(saved.left)) {
+      els.workspace.style.setProperty("--left-col", `${saved.left}px`);
+    }
+    if (Number.isFinite(saved.right)) {
+      els.workspace.style.setProperty("--right-col", `${saved.right}px`);
+    }
+  } catch {
+    localStorage.removeItem(LAYOUT_KEY);
+  }
+}
+
+function bindColumnResizers() {
+  document.querySelectorAll("[data-resizer]").forEach((resizer) => {
+    resizer.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      const side = resizer.dataset.resizer;
+      const startX = event.clientX;
+      const styles = getComputedStyle(els.workspace);
+      const startLeft = Number.parseInt(styles.getPropertyValue("--left-col"), 10);
+      const startRight = Number.parseInt(styles.getPropertyValue("--right-col"), 10);
+      resizer.classList.add("dragging");
+      resizer.setPointerCapture(event.pointerId);
+
+      const onMove = (moveEvent) => {
+        if (side === "left") {
+          setColumnWidth("left", clamp(startLeft + moveEvent.clientX - startX, 170, 360));
+        } else {
+          setColumnWidth("right", clamp(startRight - moveEvent.clientX + startX, 300, 720));
+        }
+      };
+
+      const onUp = () => {
+        resizer.classList.remove("dragging");
+        document.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerup", onUp);
+        saveLayout();
+      };
+
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
+    });
+  });
+}
+
+function setColumnWidth(side, width) {
+  els.workspace.style.setProperty(side === "left" ? "--left-col" : "--right-col", `${width}px`);
+}
+
+function saveLayout() {
+  const styles = getComputedStyle(els.workspace);
+  localStorage.setItem(LAYOUT_KEY, JSON.stringify({
+    left: Number.parseInt(styles.getPropertyValue("--left-col"), 10),
+    right: Number.parseInt(styles.getPropertyValue("--right-col"), 10),
+  }));
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }

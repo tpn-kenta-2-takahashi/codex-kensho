@@ -27,7 +27,7 @@
         </div>
       </header>
 
-      <main class="workspace">
+      <main id="workspace" class="workspace">
         <aside class="sidebar" aria-label="ナビゲーション">
           <section>
             <h2>時期</h2>
@@ -41,6 +41,8 @@
             <nav id="customListNav" class="nav-list"></nav>
           </section>
         </aside>
+
+        <div class="column-resizer" data-resizer="left" role="separator" aria-label="左カラムの幅を調整"></div>
 
         <section class="task-pane">
           <form id="quickAddForm" class="quick-add">
@@ -67,6 +69,8 @@
             <div id="completedList" class="task-list completed"></div>
           </div>
         </section>
+
+        <div class="column-resizer" data-resizer="right" role="separator" aria-label="右カラムの幅を調整"></div>
 
         <aside id="detailPane" class="detail-pane empty">
           <p class="empty-detail">タスクを選ぶと、ここで詳しく編集できます。</p>
